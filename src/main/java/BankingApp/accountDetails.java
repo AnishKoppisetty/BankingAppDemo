@@ -2,11 +2,17 @@ package BankingApp;
 
 abstract class accountDetails {
 	
-	public String customerName;
-	public int accountNumber;
-	public double balance;
+	protected String customerName;
+	protected int accountNumber;
+	protected double balance;
 	
-	abstract void withdraw(double amount);
+	public abstract void withdraw(double amount);
+	
+	public accountDetails(String name, int id, double initialBalance) {
+        this.customerName = name;
+        this.accountNumber = id;
+        this.balance = initialBalance;
+    }
 	
 
 }
