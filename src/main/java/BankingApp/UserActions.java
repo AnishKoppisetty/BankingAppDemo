@@ -51,11 +51,22 @@ public class UserActions extends ObjectsPageFactory {
             System.out.println("Error saving user.");
         }
     } */
-	public static void signUp(String name, String id, double balance) throws Exception {
+	  
+  
+    public static void signUp(
+            String username,
+            String firstName,
+            String lastName,
+            String dob,
+            String email,
+            String address,
+            String phone,
+            double balance
+    ) throws Exception {
 
         Workbook workbook;
         Sheet sheet;
-        File file = new File(filePath);
+        File file = new File(FILE_NAME);
 
         if (file.exists()) {
             FileInputStream fis = new FileInputStream(file);
@@ -66,62 +77,69 @@ public class UserActions extends ObjectsPageFactory {
         }
 
         sheet = workbook.getSheet(SHEET_NAME);
-        if (sheet == null) {
-            sheet = workbook.createSheet(SHEET_NAME);
-        }
+        if (sheet == null) sheet = workbook.createSheet(SHEET_NAME);
 
         if (sheet.getRow(0) == null) {
             Row header = sheet.createRow(0);
-            header.createCell(0).setCellValue("Name");
-            header.createCell(1).setCellValue("ID");
-            header.createCell(2).setCellValue("Balance");
+            header.createCell(0).setCellValue("Username");
+            header.createCell(1).setCellValue("Password (common for now)");
+            header.createCell(2).setCellValue("First Name");
+            header.createCell(3).setCellValue("Last Name");
+            header.createCell(4).setCellValue("DOB");
+            header.createCell(5).setCellValue("ID");
+            header.createCell(6).setCellValue("Email");
+            header.createCell(7).setCellValue("Address");
+            header.createCell(8).setCellValue("Phone");
+            header.createCell(9).setCellValue("Balance");
         }
 
         for (int i = 1; i <= sheet.getLastRowNum(); i++) {
             Row row = sheet.getRow(i);
             if (row == null) continue;
 
-            Cell idCell = row.getCell(1);
-            if (idCell == null) continue;
+            Cell uCell = row.getCell(0);
+            if (uCell == null) continue;
 
-            idCell.setCellType(CellType.STRING);
-            String existingId = idCell.getStringCellValue();
+            uCell.setCellType(CellType.STRING);
+            String existingUsername = uCell.getStringCellValue();
 
-            if (existingId.equals(id)) {
+            if (existingUsername.equalsIgnoreCase(username)) {
                 workbook.close();
-                throw new IllegalArgumentException("ID already exists: " + id);
+                throw new IllegalArgumentException("Username already exists.");
             }
         }
+
+        String id = generateId(firstName, lastName, dob);
 
         int newRowIndex = sheet.getLastRowNum() + 1;
         Row newRow = sheet.createRow(newRowIndex);
 
-        newRow.createCell(0).setCellValue(name);
-        newRow.createCell(1).setCellValue(id);
-        newRow.createCell(2).setCellValue(balance);
+        newRow.createCell(0).setCellValue(username);
+        newRow.createCell(1).setCellValue(COMMON_PASSWORD);
+        newRow.createCell(2).setCellValue(firstName);
+        newRow.createCell(3).setCellValue(lastName);
+        newRow.createCell(4).setCellValue(dob); 
+        newRow.createCell(5).setCellValue(id);
+        newRow.createCell(6).setCellValue(email);
+        newRow.createCell(7).setCellValue(address);
+        newRow.createCell(8).setCellValue(phone);
+        newRow.createCell(9).setCellValue(balance);
 
-        FileOutputStream fos = new FileOutputStream(filePath);
+        FileOutputStream fos = new FileOutputStream(FILE_NAME);
         workbook.write(fos);
         fos.close();
         workbook.close();
     }
 
-    // ---------------- LOGIN (NEW) ----------------
-    /**
-     * Login validates that BOTH name and id match a row in Excel.
-     * If found, returns the balance.
-     * If not found, returns -1.
-     */
-    public static double login(String name, String id) throws Exception {
+    public static double login(String username, String password) throws Exception {
 
-        File file = new File(filePath);
-
-        // If the file doesn't exist, nobody can log in
-        if (!file.exists()) {
+        if (!COMMON_PASSWORD.equals(password)) {
             return -1;
         }
 
-        // Open the Excel file
+        File file = new File(FILE_NAME);
+        if (!file.exists()) return -1;
+
         FileInputStream fis = new FileInputStream(file);
         Workbook workbook = new XSSFWorkbook(fis);
         fis.close();
@@ -132,36 +150,35 @@ public class UserActions extends ObjectsPageFactory {
             return -1;
         }
 
-        // Go through every user row (start at 1 because row 0 is header)
         for (int i = 1; i <= sheet.getLastRowNum(); i++) {
             Row row = sheet.getRow(i);
             if (row == null) continue;
 
-            // Read name, id, balance cells
-            Cell nameCell = row.getCell(0);
-            Cell idCell = row.getCell(1);
-            Cell balCell = row.getCell(2);
+            Cell uCell = row.getCell(0);
+            Cell balCell = row.getCell(9);
 
-            if (nameCell == null || idCell == null || balCell == null) continue;
+            if (uCell == null || balCell == null) continue;
 
-            // Convert name/id to STRING so comparisons work safely
-            nameCell.setCellType(CellType.STRING);
-            idCell.setCellType(CellType.STRING);
+            uCell.setCellType(CellType.STRING);
+            String existingUsername = uCell.getStringCellValue();
 
-            String existingName = nameCell.getStringCellValue();
-            String existingId = idCell.getStringCellValue();
-
-            // If BOTH match → login success
-            if (existingName.equalsIgnoreCase(name) && existingId.equals(id)) {
+            if (existingUsername.equalsIgnoreCase(username)) {
                 double balance = balCell.getNumericCellValue();
                 workbook.close();
                 return balance;
             }
         }
 
-        // No match found
         workbook.close();
         return -1;
     }
 
+    protected static String generateId(String firstName, String lastName, String dob) {
+        char f = Character.toUpperCase(firstName.trim().charAt(0));
+        char l = Character.toUpperCase(lastName.trim().charAt(0));
+
+        String dobDigits = dob.replaceAll("[^0-9]", "");
+
+        return "" + f + l + dobDigits;
+    }
 }
