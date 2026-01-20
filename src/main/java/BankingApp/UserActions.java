@@ -1,6 +1,7 @@
 package BankingApp;
 
 import java.io.*;
+import java.util.*;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -78,19 +79,26 @@ public class UserActions extends ObjectsPageFactory {
 
         sheet = workbook.getSheet(SHEET_NAME);
         if (sheet == null) sheet = workbook.createSheet(SHEET_NAME);
+        
+        ArrayList<String> cells = new ArrayList<>(Arrays.asList(
+        	    "Username",
+        	    "Password (common for now)",
+        	    "First Name",
+        	    "Last Name",
+        	    "DOB",
+        	    "ID",
+        	    "Email",
+        	    "Address",
+        	    "Phone",
+        	    "Balance"
+        	));
+        
 
         if (sheet.getRow(0) == null) {
             Row header = sheet.createRow(0);
-            header.createCell(0).setCellValue("Username");
-            header.createCell(1).setCellValue("Password (common for now)");
-            header.createCell(2).setCellValue("First Name");
-            header.createCell(3).setCellValue("Last Name");
-            header.createCell(4).setCellValue("DOB");
-            header.createCell(5).setCellValue("ID");
-            header.createCell(6).setCellValue("Email");
-            header.createCell(7).setCellValue("Address");
-            header.createCell(8).setCellValue("Phone");
-            header.createCell(9).setCellValue("Balance");
+            for (int i = 0; i < cells.size(); i++) {
+                header.createCell(i).setCellValue(cells.get(i));
+            }
         }
 
         for (int i = 1; i <= sheet.getLastRowNum(); i++) {
