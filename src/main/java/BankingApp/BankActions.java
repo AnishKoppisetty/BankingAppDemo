@@ -121,14 +121,15 @@ public class BankActions extends ObjectsPageFactory {
 
             System.out.println("\nSignup successful!");
             System.out.println("Your temporary password is: 12345");
-            System.out.println("Your ID: " + UserActions.generateId(firstName, lastName, dob));
+            String id = java.util.UUID.randomUUID().toString();
+
 
         } catch (Exception e) {
             System.out.println("\nSignup failed: " + e.getMessage());
         }
     }
 
-    public static void login() {
+    public static void login() throws Exception {
         try {
             System.out.println("\n=== Login ===");
 
@@ -146,19 +147,27 @@ public class BankActions extends ObjectsPageFactory {
                 if (password.trim().isEmpty()) System.out.println("Password cannot be empty.");
             } while (password.trim().isEmpty());
 
-            double balance = UserActions.login(username, password);
+            UserActions.UserProfile user = UserActions.login(username);
 
-            if (balance >= 0) {
-                System.out.println("\nLogin successful!");
-                System.out.println("Your balance is: $" + balance);
-            } else {
+            if (user == null) {
                 System.out.println("\nInvalid username or password.");
+                return;
             }
+
+            if (!COMMON_PASSWORD.equals(password)) {
+                System.out.println("\nInvalid username or password.");
+                return;
+            }
+
+            System.out.println("\nLogin successful!");
+            System.out.println("Welcome, " + user.firstName + " " + user.lastName + "!");
+            System.out.println("Your balance is: $" + user.balance);
 
         } catch (Exception e) {
             System.out.println("\nLogin failed: " + e.getMessage());
         }
     }
+
 
     private static boolean isValidDob(String dob) {
         try {

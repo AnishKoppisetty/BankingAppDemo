@@ -1,192 +1,87 @@
 package BankingApp;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.UUID;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class UserActions extends ObjectsPageFactory {
 
-    /*public static void runLogin() {
-        System.out.print("Enter Name: ");
-        String name = s.nextLine();
-        System.out.print("Enter ID: ");
-        int id = Integer.parseInt(s.nextLine());
+	private static final Path USER_DETAILS_DIR = Path.of(
+			"/Users/anishkoppisetty/Desktop/Framework/BankingAppDemo/src/main/java/BankingApp/OfficialUserInfoJSON");
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            boolean found = false;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts[0].trim().equalsIgnoreCase(name) && Integer.parseInt(parts[1].trim()) == id) {
-                    System.out.println("Login Successful! Balance: " + parts[2].trim());
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) System.out.println("Invalid Credentials.");
-        } catch (IOException e) {
-            System.out.println("File error: " + e.getMessage());
-        }
-    }
+	public static class UserProfile {
+		public String username;
+		public String firstName;
+		public String lastName;
+		public String dob;
+		public String id;
+		public String email;
+		public String address;
+		public String phone;
+		public double balance;
 
-    public static void runSignUp() {
-        System.out.print("Enter Name: ");
-        String name = s.nextLine();
-        System.out.print("Enter ID: ");
-        int id = s.nextInt();
-        System.out.print("Initial Deposit: ");
-        double deposit = s.nextDouble();
+		public UserProfile() {
+		}
 
-        SavingAccount newCustomer = new SavingAccount(name, id, deposit);
+		public UserProfile(String username, String firstName, String lastName, String dob, String id, String email,
+				String address, String phone, double balance) {
+			this.username = username;
+			this.firstName = firstName;
+			this.lastName = lastName;
+			this.dob = dob;
+			this.id = id;
+			this.email = email;
+			this.address = address;
+			this.phone = phone;
+			this.balance = balance;
+		}
+	}
 
-        try (FileWriter writer = new FileWriter(filePath, true)) {
-            writer.write(newCustomer.customerName + ", " + newCustomer.accountNumber + ", " + newCustomer.balance + "\n");
-            System.out.println("Account created for " + name);
-        } catch (IOException e) {
-            System.out.println("Error saving user.");
-        }
-    } */
-	  
-  
-    public static void signUp(
-            String username,
-            String firstName,
-            String lastName,
-            String dob,
-            String email,
-            String address,
-            String phone,
-            double balance
-    ) throws Exception {
+	private static void saveUserAsJson(UserProfile profile) throws IOException {
 
-        Workbook workbook;
-        Sheet sheet;
-        File file = new File(FILE_NAME);
+		Files.createDirectories(USER_DETAILS_DIR);
 
-        if (file.exists()) {
-            FileInputStream fis = new FileInputStream(file);
-            workbook = new XSSFWorkbook(fis);
-            fis.close();
-        } else {
-            workbook = new XSSFWorkbook();
-        }
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
+		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+		mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
-        sheet = workbook.getSheet(SHEET_NAME);
-        if (sheet == null) sheet = workbook.createSheet(SHEET_NAME);
-        
-        ArrayList<String> cells = new ArrayList<>(Arrays.asList(
-        	    "Username",
-        	    "Password (common for now)",
-        	    "First Name",
-        	    "Last Name",
-        	    "DOB",
-        	    "ID",
-        	    "Email",
-        	    "Address",
-        	    "Phone",
-        	    "Balance"
-        	));
-        
+		Path jsonPath = USER_DETAILS_DIR.resolve(profile.id + ".json");
 
-        if (sheet.getRow(0) == null) {
-            Row header = sheet.createRow(0);
-            for (int i = 0; i < cells.size(); i++) {
-                header.createCell(i).setCellValue(cells.get(i));
-            }
-        }
+		mapper.writeValue(jsonPath.toFile(), profile);
 
-        for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-            Row row = sheet.getRow(i);
-            if (row == null) continue;
+		System.out.println("JSON written to: " + jsonPath.toAbsolutePath());
+	}
 
-            Cell uCell = row.getCell(0);
-            if (uCell == null) continue;
+	public static void signUp(String username, String firstName, String lastName, String dob, String email,
+			String address, String phone, double balance) throws Exception {
 
-            uCell.setCellType(CellType.STRING);
-            String existingUsername = uCell.getStringCellValue();
+		String id = UUID.randomUUID().toString();
 
-            if (existingUsername.equalsIgnoreCase(username)) {
-                workbook.close();
-                throw new IllegalArgumentException("Username already exists.");
-            }
-        }
+		UserProfile profile = new UserProfile(username, firstName, lastName, dob, id, email, address, phone, balance);
 
-        String id = generateId(firstName, lastName, dob);
+		saveUserAsJson(profile);
+	}
 
-        int newRowIndex = sheet.getLastRowNum() + 1;
-        Row newRow = sheet.createRow(newRowIndex);
+	public static UserProfile login(String username) throws Exception {
 
-        newRow.createCell(0).setCellValue(username);
-        newRow.createCell(1).setCellValue(COMMON_PASSWORD);
-        newRow.createCell(2).setCellValue(firstName);
-        newRow.createCell(3).setCellValue(lastName);
-        newRow.createCell(4).setCellValue(dob); 
-        newRow.createCell(5).setCellValue(id);
-        newRow.createCell(6).setCellValue(email);
-        newRow.createCell(7).setCellValue(address);
-        newRow.createCell(8).setCellValue(phone);
-        newRow.createCell(9).setCellValue(balance);
+		if (!Files.exists(USER_DETAILS_DIR))
+			return null;
 
-        FileOutputStream fos = new FileOutputStream(FILE_NAME);
-        workbook.write(fos);
-        fos.close();
-        workbook.close();
-    }
+		ObjectMapper mapper = new ObjectMapper();
 
-    public static double login(String username, String password) throws Exception {
+		for (Path file : Files.list(USER_DETAILS_DIR).toList()) {
+			UserProfile user = mapper.readValue(file.toFile(), UserProfile.class);
 
-        if (!COMMON_PASSWORD.equals(password)) {
-            return -1;
-        }
-
-        File file = new File(FILE_NAME);
-        if (!file.exists()) return -1;
-
-        FileInputStream fis = new FileInputStream(file);
-        Workbook workbook = new XSSFWorkbook(fis);
-        fis.close();
-
-        Sheet sheet = workbook.getSheet(SHEET_NAME);
-        if (sheet == null) {
-            workbook.close();
-            return -1;
-        }
-
-        for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-            Row row = sheet.getRow(i);
-            if (row == null) continue;
-
-            Cell uCell = row.getCell(0);
-            Cell balCell = row.getCell(9);
-
-            if (uCell == null || balCell == null) continue;
-
-            uCell.setCellType(CellType.STRING);
-            String existingUsername = uCell.getStringCellValue();
-
-            if (existingUsername.equalsIgnoreCase(username)) {
-                double balance = balCell.getNumericCellValue();
-                workbook.close();
-                return balance;
-            }
-        }
-
-        workbook.close();
-        return -1;
-    }
-
-    protected static String generateId(String firstName, String lastName, String dob) {
-        char f = Character.toUpperCase(firstName.trim().charAt(0));
-        char l = Character.toUpperCase(lastName.trim().charAt(0));
-
-        String dobDigits = dob.replaceAll("[^0-9]", "");
-
-        return "" + f + l + dobDigits;
-    }
+			if (user.username.equalsIgnoreCase(username)) {
+				return user;
+			}
+		}
+		return null;
+	}
 }
