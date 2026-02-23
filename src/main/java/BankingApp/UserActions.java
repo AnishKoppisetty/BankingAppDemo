@@ -1,47 +1,87 @@
 package BankingApp;
 
-import java.io.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.UUID;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class UserActions extends ObjectsPageFactory {
 
-    public static void runLogin() {
-        System.out.print("Enter Name: ");
-        String name = s.nextLine();
-        System.out.print("Enter ID: ");
-        int id = Integer.parseInt(s.nextLine());
+	private static final Path USER_DETAILS_DIR = Path.of(
+			"/Users/anishkoppisetty/Desktop/Framework/BankingAppDemo/src/main/java/BankingApp/OfficialUserInfoJSON");
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            boolean found = false;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts[0].trim().equalsIgnoreCase(name) && Integer.parseInt(parts[1].trim()) == id) {
-                    System.out.println("Login Successful! Balance: " + parts[2].trim());
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) System.out.println("Invalid Credentials.");
-        } catch (IOException e) {
-            System.out.println("File error: " + e.getMessage());
-        }
-    }
+	public static class UserProfile {
+		public String username;
+		public String firstName;
+		public String lastName;
+		public String dob;
+		public String id;
+		public String email;
+		public String address;
+		public String phone;
+		public double balance;
 
-    public static void runSignUp() {
-        System.out.print("Enter Name: ");
-        String name = s.nextLine();
-        System.out.print("Enter ID: ");
-        int id = s.nextInt();
-        System.out.print("Initial Deposit: ");
-        double deposit = s.nextDouble();
+		public UserProfile() {
+		}
 
-        SavingAccount newCustomer = new SavingAccount(name, id, deposit);
+		public UserProfile(String username, String firstName, String lastName, String dob, String id, String email,
+				String address, String phone, double balance) {
+			this.username = username;
+			this.firstName = firstName;
+			this.lastName = lastName;
+			this.dob = dob;
+			this.id = id;
+			this.email = email;
+			this.address = address;
+			this.phone = phone;
+			this.balance = balance;
+		}
+	}
 
-        try (FileWriter writer = new FileWriter(filePath, true)) {
-            writer.write(newCustomer.customerName + ", " + newCustomer.accountNumber + ", " + newCustomer.balance + "\n");
-            System.out.println("Account created for " + name);
-        } catch (IOException e) {
-            System.out.println("Error saving user.");
-        }
-    }
+	private static void saveUserAsJson(UserProfile profile) throws IOException {
+
+		Files.createDirectories(USER_DETAILS_DIR);
+
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
+		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+		mapper.enable(SerializationFeature.INDENT_OUTPUT);
+
+		Path jsonPath = USER_DETAILS_DIR.resolve(profile.id + ".json");
+
+		mapper.writeValue(jsonPath.toFile(), profile);
+
+		System.out.println("JSON written to: " + jsonPath.toAbsolutePath());
+	}
+
+	public static void signUp(String username, String firstName, String lastName, String dob, String email,
+			String address, String phone, double balance) throws Exception {
+
+		String id = UUID.randomUUID().toString();
+
+		UserProfile profile = new UserProfile(username, firstName, lastName, dob, id, email, address, phone, balance);
+
+		saveUserAsJson(profile);
+	}
+
+	public static UserProfile login(String username) throws Exception {
+
+		if (!Files.exists(USER_DETAILS_DIR))
+			return null;
+
+		ObjectMapper mapper = new ObjectMapper();
+
+		for (Path file : Files.list(USER_DETAILS_DIR).toList()) {
+			UserProfile user = mapper.readValue(file.toFile(), UserProfile.class);
+
+			if (user.username.equalsIgnoreCase(username)) {
+				return user;
+			}
+		}
+		return null;
+	}
 }

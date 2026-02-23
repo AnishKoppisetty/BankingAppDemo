@@ -2,22 +2,33 @@ package BankingApp;
 
 public class main extends ObjectsPageFactory {
 
-    public static void main(String[] args) {
-        System.out.print("TYPE 1 to login and 2 to sign up: ");
-        int decision = s.nextInt();
-        s.nextLine(); 
+	public static void main(String[] args) throws Exception {
 
-        switch(decision) {
-            case 1:
-                UserActions.runLogin();
+        System.out.println("=== Simple Bank App ===");
+        System.out.println("1) Sign Up");
+        System.out.println("2) Login");
+        System.out.println("3) Exit");
+        System.out.print("Choose an option: ");
+
+        String choiceStr = s.nextLine();
+
+        switch (choiceStr) {
+            case "1":
+                BankActions.signup();
                 break;
-            case 2:
-                UserActions.runSignUp();
+
+            case "2":
+                BankActions.login();
                 break;
+
+            case "3":
+                System.out.println("Goodbye!");
+                break;
+
             default:
-                System.out.println("Invalid selection.");
+                System.out.println("Invalid option.");
         }
-        
+
         s.close();
     }
 }

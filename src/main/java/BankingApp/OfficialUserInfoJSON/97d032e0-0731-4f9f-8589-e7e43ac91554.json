@@ -1,0 +1,11 @@
+{
+  "username" : "testJsonv2",
+  "firstName" : "testtwo",
+  "lastName" : "testwo",
+  "dob" : "09/18/1899",
+  "id" : "97d032e0-0731-4f9f-8589-e7e43ac91554",
+  "email" : "bob@gmail.com",
+  "address" : "Didystreet, mctown, Texas, Us - 84920",
+  "phone" : "1111111111",
+  "balance" : 1.0E8
+}

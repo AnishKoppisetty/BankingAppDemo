@@ -4,5 +4,7 @@ import java.util.Scanner;
 
 public class ObjectsPageFactory {
     public static Scanner s = new Scanner(System.in);
-    public static final String filePath = "/Users/anishkoppisetty/Desktop/Framework/BankingApp/src/main/java/users.txt";
+    public static final String FILE_NAME = "users.xlsx";
+    public static final String SHEET_NAME = "Accounts";
+    public static final String COMMON_PASSWORD = "12345";
 }

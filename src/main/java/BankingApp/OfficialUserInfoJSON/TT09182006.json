@@ -1,0 +1,11 @@
+{
+	"username": "jsonTestv1",
+	"firstName": "testone",
+	"lastName": "testone",
+	"dob": "09/18/2006",
+	"id": "TT09182006",
+	"email": "jsonTestv1@gmail.com",
+	"address": "test st., Testv1, texas, US - 67676",
+	"phone": "1234567890",
+	"balance": 69.0
+}
